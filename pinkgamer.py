@@ -159,7 +159,7 @@ async def on_message(message):
 
     #make sure i update every time i add something
     if message.content == '!help':
-        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg""")
+        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate""")
 
 
 
@@ -248,6 +248,40 @@ async def on_message(message):
             messages.append(msg)
         quote = random.choice(messages)
         await message.channel.send(f'"{quote.content}" - {quote.author.display_name}')
+
+    #donate money
+    if message.content == '!donate':
+        startuser = message.author.id
+
+        await message.channel.send(f'OH BOYYY LOOK AT MR MONEY BAGS HERE, your so sweet on giving money to someone, who would you like to give money too? (@ them)')
+        
+        response = await client.wait_for('message', check=check)
+        if len(response.mentions) == 0:
+            await message.channel.send('You need to @ someone!')
+            return
+        else:
+            pooruser = response.mentions[0].id
+
+        await message.channel.send('How much would you like to give deary?')
+        response = await client.wait_for('message', check=check)
+
+        try:
+            amount = int(response.content)
+        except ValueError:
+            await message.channel.send('That\'s not a number dummy!')
+            return
+        #checking for neg amounts
+        if amount < 0:
+            await message.channel.send(f'tsk tsk, trying to rob someone i see. maybe a future command.... <@{pooruser}> <@{startuser}> IS TRYING TO ROB YOU. RUNN FOR YOUR FUCKING LIFE')
+            return
+        userbal = get_balance(startuser)
+        if userbal < amount:
+            await message.channel.send(f'I know <@{pooruser}> is broke, but dont break yourself helping them!')
+        else:
+            update_balance(pooruser, get_balance(pooruser) + amount)
+            update_balance(startuser, get_balance(startuser) - amount)
+            await message.channel.send(f'Good job <@{startuser}> your such a good person for helping out <@{pooruser}> and giving them ${amount}!')
+
 
 
 client.run(TOKEN)
