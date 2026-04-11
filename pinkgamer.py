@@ -109,7 +109,8 @@ async def on_message(message):
 
     #make sure i update every time i add something
     if message.content == '!help':
-        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll""")
+        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, !die
+                                    pinging the bot""")
 
 
 
@@ -153,8 +154,19 @@ async def on_message(message):
         else:
             await message.channel.send(f'OMG YOUR SO SMART <@{message.author.id}>')
             time.sleep(5)
-            await message.channel.send(f'nvm fuckin dumbass, you really thought you got that? <@743189642836443260> CLOWN ON <@{message.author.id}> FOR BEINGS SO STUPID')
+            await message.channel.send(f'nvm fuckin dumbass, you really thought you got that? EVERYONE CLOWN ON <@{message.author.id}> FOR BEINGS SO STUPID')
             await message.channel.send(f'the roll was {rolled} dumbass')
+
+
+
+    if message.content == 'die':
+        await message.channel.send(f'KYS')
+
+
+
+    if '<@1492354981033017444>' in message.content:
+        await message.channel.send('You rang?')
+
 
 
 client.run(TOKEN)
