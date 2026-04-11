@@ -154,25 +154,27 @@ async def on_message(message):
 
     #make sure i update every time i add something
     if message.content == '!help':
-        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, !die
-                                    pinging the bot, !joke, !balance, !letslarp""")
+        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die
+pinging the bot, !joke, !balance, !letslarp""")
 
 
 
     #hello command
     if message.content == '!hello':
-        await message.channel.send('Hey there!')
+        helloMsg = ['Hey there!', 'Hello!', 'Hi there!', 'Hiya', 'BANANA', 'sup', 'I have no idea what is going on', 'Hi Earthling']
+        await message.channel.send(random.choice(helloMsg))
 
 
 
     #revisit later to make cooler rolling system
     if message.content == '!roll':
-        await message.channel.send(f'🎲 You rolled a {roll()}!')
+        await message.channel.send(f'🎲 You rolled a {roll()} from a d20!')
     
     #penis line
     if message.content == 'penis':
         await message.channel.send('show it to me *NOW*')
     
+
 
     # greysons ideas
     if 'expensive' in message.content.lower(): 
@@ -212,15 +214,21 @@ async def on_message(message):
         await message.channel.send('You rang?')
 
 
+
+    #i set up a whole database with user balances
     if message.content == '!balance':
         balance = get_balance(message.author.id)
         await message.channel.send(f'<@{message.author.id}> you have ${balance}')
 
+
+
+    #dad joke
     if message.content == '!joke':
         await message.channel.send('Dad')
 
-
+    #bossdrobots idea. No clue what it means
     if message.content == '!letslarp':
         await message.channel.send('just this one e')
+
 
 client.run(TOKEN)
