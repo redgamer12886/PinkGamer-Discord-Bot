@@ -148,7 +148,7 @@ async def on_message(message):
         rolled = roll()
         await message.channel.send('whatcha guess?')
         response = await client.wait_for('message', check=check)
-        if response == roll:
+        if response == rolled:
             await message.channel.send(f'holy fucking shit your a wizard <@{message.author.id}>')
         else:
             await message.channel.send(f'OMG YOUR SO SMART <@{message.author.id}>')
