@@ -67,7 +67,11 @@ async def blackjack(message):
     
     response = await client.wait_for('message', check=check)
     bet = int(response.content)
-    
+
+    if(bet < 0):
+        message.channel.send('You think your smart huh, lil boy. Only person your impressing is that girl you talk too, wait. That doesnt exist. LLLLL')
+        return
+
     balance = get_balance(message.author.id)
     if bet > balance:
         await message.channel.send('You don\'t have enough money!')
