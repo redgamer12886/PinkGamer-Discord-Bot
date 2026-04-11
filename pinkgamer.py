@@ -171,7 +171,7 @@ pinging the bot, !joke, !balance, !letslarp""")
         await message.channel.send(f'🎲 You rolled a {roll()} from a d20!')
     
     #penis line
-    if message.content == 'penis':
+    if message.content.lower == 'penis':
         await message.channel.send('show it to me *NOW*')
     
 
@@ -206,7 +206,7 @@ pinging the bot, !joke, !balance, !letslarp""")
 
 
 
-    if message.content == 'die':
+    if message.content.lower == 'die':
         await message.channel.send(f'KYS')
 
     #self ping response
@@ -223,12 +223,18 @@ pinging the bot, !joke, !balance, !letslarp""")
 
 
     #dad joke
-    if message.content == '!joke':
+    if message.content.lower == '!joke':
         await message.channel.send('Dad')
 
     #bossdrobots idea. No clue what it means
-    if message.content == '!letslarp':
+    if message.content.lower == '!letslarp':
         await message.channel.send('just this one e')
+
+    if message.content == '!beg':
+        await message.channel.send(f'You would wouldnt you, lil bitch. fucking poor. imaging needing to beg from ME. Ill petty you this one time')
+        update_balance(message.author.id, 1)  # Add $1 to the user's balance
+
+
 
 
 client.run(TOKEN)
