@@ -1,8 +1,10 @@
 
-
+import random
 import discord
 import os
 import random
+import time
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -77,6 +79,9 @@ async def blackjack(message):
             return  # end the game
 
 
+def roll():
+    result = random.randint(1, 20)
+    return result
 
 
 
@@ -91,6 +96,12 @@ async def on_message(message):
 
     #all the text commands for all the stuff sit does
 
+    def check(m):
+        return m.author == message.author and m.channel == message.channel
+
+
+
+
     if message.author == client.user:
         return
 
@@ -98,7 +109,7 @@ async def on_message(message):
 
     #make sure i update every time i add something
     if message.content == '!help':
-        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald""")
+        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll""")
 
 
 
@@ -110,9 +121,7 @@ async def on_message(message):
 
     #revisit later to make cooler rolling system
     if message.content == '!roll':
-        import random
-        result = random.randint(1, 20)
-        await message.channel.send(f'🎲 You rolled a {result}!')
+        await message.channel.send(f'🎲 You rolled a {roll()}!')
     
     #penis line
     if message.content == 'penis':
@@ -133,6 +142,19 @@ async def on_message(message):
         await message.channel.send('Ohhhhhh a game of blackjack you wanna play I see, alright. Im gonna destroy you!')
         await blackjack(message)
 
+
+
+    if message.content == '!guessroll':
+        rolled = roll()
+        await message.channel.send('whatcha guess?')
+        response = await client.wait_for('message', check=check)
+        if response == roll:
+            await message.channel.send(f'holy fucking shit your a wizard <@{message.author.id}>')
+        else:
+            await message.channel.send(f'OMG YOUR SO SMART <@{message.author.id}>')
+            time.sleep(5)
+            await message.channel.send(f'nvm fuckin dumbass, you really thought you got that? <@743189642836443260> CLOWN ON <@{message.author.id}> FOR BEINGS SO STUPID')
+            await message.channel.send(f'the roll was {rolled} dumbass')
 
 
 client.run(TOKEN)
