@@ -158,8 +158,7 @@ async def on_message(message):
 
     #make sure i update every time i add something
     if message.content == '!help':
-        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die
-pinging the bot, !joke, !balance, !letslarp, !quote, !beg""")
+        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg""")
 
 
 
