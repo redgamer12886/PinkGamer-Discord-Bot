@@ -100,6 +100,7 @@ async def blackjack(message):
             cards.append(await draw_card(message, deck))
             if sum(cards) > 21:
                 await message.channel.send('You busted OWO! *I wins*.')
+                update_balance(message.author.id, balance - bet)
                 return  # end the game
 
         elif response.content.lower() == 'stand':
