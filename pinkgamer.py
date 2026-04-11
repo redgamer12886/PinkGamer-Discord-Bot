@@ -1,4 +1,4 @@
-
+import sqlite3
 import random
 import discord
 import os
@@ -13,6 +13,34 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
+
+
+
+
+
+
+
+
+#database setup for bank system, will add more later
+conn = sqlite3.connect('bank.db')
+c = conn.cursor()
+c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER)')
+conn.commit()
+
+
+
+def get_balance(user_id):
+    c.execute('SELECT balance FROM users WHERE user_id = ?', (str(user_id),))
+    result = c.fetchone()
+    if result is None:
+        c.execute('INSERT INTO users (user_id, balance) VALUES (?, ?)', (str(user_id), 100))
+        conn.commit()
+        return 100
+    return result[0]
+
+def update_balance(user_id, amount):
+    c.execute('UPDATE users SET balance = ? WHERE user_id = ?', (amount, str(user_id)))
+    conn.commit()
 
 
 #strickty for use in blackjack function
@@ -32,13 +60,26 @@ async def draw_card(message, deck):
 
 #blackjack function
 async def blackjack(message):
+    await message.channel.send('How much do you want to bet?')
+    
+    def check(m):
+        return m.author == message.author and m.channel == message.channel
+    
+    response = await client.wait_for('message', check=check)
+    bet = int(response.content)
+    
+    balance = get_balance(message.author.id)
+    if bet > balance:
+        await message.channel.send('You don\'t have enough money!')
+        return
+    
+    
     suits = ['♠', '♥', '♦', '♣']
     ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
     deck = [f'{rank}{suit}' for rank in ranks for suit in suits]
     random.shuffle(deck)
 
-    def check(m):
-        return m.author == message.author and m.content.lower() in ['hit', 'stand']
+    
 
     cards = []
 
@@ -70,13 +111,17 @@ async def blackjack(message):
 
             if dealertotal > 21:
                 await message.channel.send('I busted OWO! *You wins*.')
+                update_balance(message.author.id, balance + bet)
             elif playertotal > dealertotal:
                 await message.channel.send('fuck. you win.')
+                update_balance(message.author.id, balance + bet)
             elif playertotal < dealertotal:
                 await message.channel.send('FUCK YEAEAAAAAA SUCK IT BIOTCHCH I WON.')
+                update_balance(message.author.id, balance - bet)
             else:
                 await message.channel.send('its a tie...')
             return  # end the game
+
 
 
 def roll():
@@ -162,10 +207,16 @@ async def on_message(message):
     if message.content == 'die':
         await message.channel.send(f'KYS')
 
-
-
+    #self ping response
     if '<@1492354981033017444>' in message.content:
         await message.channel.send('You rang?')
+
+
+    if message.content == '!balance':
+        balance = get_balance(message.author.id)
+        await message.channel.send(f'<@{message.author.id}> you have ${balance}')
+
+
 
 
 
