@@ -171,7 +171,7 @@ pinging the bot, !joke, !balance, !letslarp""")
         await message.channel.send(f'🎲 You rolled a {roll()} from a d20!')
     
     #penis line
-    if message.content.lower == 'penis':
+    if message.content == 'penis':
         await message.channel.send('show it to me *NOW*')
     
 
@@ -184,6 +184,7 @@ pinging the bot, !joke, !balance, !letslarp""")
     
     if 'mcdonald' in message.content.lower():
         await message.channel.send('mcdondalds')
+
 
 
     if message.content == '!blackjack':
@@ -206,7 +207,7 @@ pinging the bot, !joke, !balance, !letslarp""")
 
 
 
-    if message.content.lower == 'die':
+    if 'die' in message.content.lower:
         await message.channel.send(f'KYS')
 
     #self ping response
@@ -223,11 +224,11 @@ pinging the bot, !joke, !balance, !letslarp""")
 
 
     #dad joke
-    if message.content.lower == '!joke':
+    if message.content == '!joke':
         await message.channel.send('Dad')
 
     #bossdrobots idea. No clue what it means
-    if message.content.lower == '!letslarp':
+    if message.content == '!letslarp':
         await message.channel.send('just this one e')
 
     if message.content == '!beg':
