@@ -155,7 +155,7 @@ async def on_message(message):
     #make sure i update every time i add something
     if message.content == '!help':
         await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, !die
-                                    pinging the bot""")
+                                    pinging the bot, !joke, !balance""")
 
 
 
@@ -216,6 +216,8 @@ async def on_message(message):
         balance = get_balance(message.author.id)
         await message.channel.send(f'<@{message.author.id}> you have ${balance}')
 
+    if message.content == '!joke':
+        await message.channel.send('Dad')
 
 
 
