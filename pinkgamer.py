@@ -24,6 +24,7 @@ async def on_message(message):
         return
 
 
+
     #make sure i update every time i add something
     if message.content == '!help':
         await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald""")
@@ -50,6 +51,8 @@ async def on_message(message):
     # greysons ideas
     if 'expensive' in message.content.lower(): 
         await message.channel.send('kidna espesive')
+
+
     
     if 'mcdonald' in message.content.lower():
         await message.channel.send('mcdondalds')
