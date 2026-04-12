@@ -6,7 +6,7 @@ import time
 import asyncio
 
 
-
+from discord.ext import tasks
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
@@ -19,6 +19,7 @@ botId = '1492354981033017444'
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 client = discord.Client(intents=intents)
 
 
@@ -47,9 +48,33 @@ async def get_youtube_video(query):
 #database setup for bank system, will add more later
 conn = sqlite3.connect('bank.db')
 c = conn.cursor()
-c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER)')
+c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER, invested FLOAT DEFAULT 0)')
 conn.commit()
 
+
+#invest helper functions
+
+#gets invested amount
+def get_invested(user_id):
+    c.execute('SELECT invested FROM users WHERE user_id = ?', (str(user_id),))
+    result = c.fetchone()
+
+    if result is None:
+        return 0
+    return result[0]
+
+#update invested
+def update_invested(user_id, amount):
+    c.execute('UPDATE users SET invested = ? WHERE user_id = ?', (int(amount), str(user_id)))
+    conn.commit()
+
+
+
+
+
+
+
+#bank account helper functions
 #get bal for the moeny stuff
 def get_balance(user_id):
     c.execute('SELECT balance FROM users WHERE user_id = ?', (str(user_id),))
@@ -194,13 +219,28 @@ def roll():
 
 
 
+
+@tasks.loop(hours=6)
+async def apply_interest():
+    bot_command_channel = client.get_channel(1443682362528632913)
+    c.execute('SELECT user_id, invested FROM users WHERE invested > 0')
+    users = c.fetchall()
+    for user_id, invested in users:
+        update_invested(user_id, (invested * 1.05))
+    await bot_command_channel.send('INVESTMENTS ARE PROFITABLE')
+
+
+    
+
+#on bot startup
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
     bot_command_channel = client.get_channel(1443682362528632913)
     await bot_command_channel.send('I am ready! (bots on <@585178815253446685>)')
+    apply_interest.start()
     
-
+#on message is sent
 @client.event
 async def on_message(message):
 
@@ -217,7 +257,7 @@ async def on_message(message):
     match message.content.lower():
         case '!help':
             #make sure i update every time i add something
-            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate, !mommyasmr, 6, """)
+            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate, !mommyasmr, 6, !invest, !getinvested, !sellinvested""")
         case '!hello':
             #hello stuff
             helloMsg = ['Hey there!', 'Hello!', 'Hi there!', 'Hiya', 'BANANA', 'sup', 'I have no idea what is going on', 'Hi Earthling']
@@ -338,7 +378,126 @@ async def on_message(message):
         case '6':
             await message.channel.send(f'7')
 
+        case s if s.startswith('!invest'):
+            user = message.author.id
+            parts = message.content.split()
+            username = message.author.display_name
+            
+            if len(parts) > 1:
+                try:
+                    amount = int(parts[1])
+                except ValueError:
+                    await message.channel.send('you gotta invest money, not whatever that is')
+                    return
+                    
+                if amount <= 0:
+                    await message.channel.send('you cant invest negative numbers dummy')
+                    return
+                
+                balance = get_balance(user)
+                if amount > balance:
+                    await message.channel.send('You don\'t have enough money!')
+                    return
 
+                update_invested(user, get_invested(user) + amount)
+                update_balance(user, balance - amount)
+                await message.channel.send(f'Looks like someones being smart with their money. {username} invested ${amount}')
+            else: 
+                await message.channel.send('How much would you like to invest?')
+                response = await client.wait_for('message', check=check)
+
+                try:
+                    amount = int(response.content)
+                except ValueError:
+                    await message.channel.send('you gotta invest money, not whatever that is')
+                    return
+
+                if amount <= 0:
+                    await message.channel.send('you cant invest negative numbers dummy')
+                    return
+
+                balance = get_balance(user)
+                if amount > balance:
+                    await message.channel.send('You don\'t have enough money!')
+                    return
+
+                update_invested(user, get_invested(user) + amount)
+                update_balance(user, balance - amount)
+                await message.channel.send(f'Looks like someones being smart with their money. {username} invested ${amount}')
+
+        case s if s.startswith('!sellinvested'):
+            user = message.author.id
+            parts = message.content.split()
+            username = message.author.display_name
+
+            if len(parts) > 1:
+                try:
+                    amount = int(parts[1])
+                except ValueError:
+                    await message.channel.send('you gotta sell money, not whatever that is')
+                    return
+
+                if amount <= 0:
+                    await message.channel.send('you cant sell negative numbers dummy')
+                    return
+
+                invest = get_invested(user)
+                if amount > invest:
+                    await message.channel.send('You don\'t have enough invested!')
+                    return
+
+                balance = get_balance(user)
+                update_invested(user, invest - amount)
+                update_balance(user, balance + amount)
+                await message.channel.send(f'Looks like someones wants their money. {username} sold ${amount}')
+
+            else:
+                await message.channel.send('How much would you like to sell?')
+                response = await client.wait_for('message', check=check)
+
+                try:
+                    amount = int(response.content)
+                except ValueError:
+                    await message.channel.send('you gotta sell money, not whatever that is')
+                    return
+
+                if amount <= 0:
+                    await message.channel.send('you cant sell negative numbers dummy')
+                    return
+
+                invest = get_invested(user)
+                if amount > invest:
+                    await message.channel.send('You don\'t have enough invested!')
+                    return
+
+                balance = get_balance(user)
+                update_invested(user, invest - amount)
+                update_balance(user, balance + amount)
+                await message.channel.send(f'Looks like someones wants their money. {username} sold ${amount}')
+
+
+
+        case '!getinvested':
+            user_id = message.author.id
+            username = message.author.display_name
+            amount = get_invested(user_id)
+            await message.channel.send(f'Ooo looky, {username} has ${amount} invested. Pretty hot')
+
+        #super user commands
+        case s if s.startswith('!fixuser'):
+            print(f'author id: {message.author.id}')
+            print(f'mentions: {message.mentions}')
+            if message.author.id == 585178815253446685:
+                if len(message.mentions) == 0:
+                    await message.channel.send('You need to @ someone!')
+                    return
+                target_id = message.mentions[0].id
+                c.execute('UPDATE users SET balance = 100, invested = 0 WHERE user_id = ?', (str(target_id),))
+                conn.commit()
+                await message.channel.send(f'Fixed <@{target_id}>')
+            else:
+                await message.channel.send('You don\'t have permission to do that!')        
+        
         case _:
             pass
         
