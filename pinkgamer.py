@@ -2,9 +2,9 @@ import sqlite3
 import random
 import discord
 import os
-import random
 import time
 import asyncio
+
 
 
 from googleapiclient.discovery import build
@@ -17,7 +17,6 @@ YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
-
 
 
 
@@ -62,6 +61,7 @@ def get_balance(user_id):
 def update_balance(user_id, amount):
     c.execute('UPDATE users SET balance = ? WHERE user_id = ?', (amount, str(user_id)))
     conn.commit()
+
 
 
 #strickty for use in blackjack function
@@ -190,6 +190,7 @@ async def on_ready():
     bot_command_channel = client.get_channel(1443682362528632913)
     await bot_command_channel.send('I am ready! (bots on <@585178815253446685>)')
 
+
 @client.event
 async def on_message(message):
 
@@ -206,7 +207,7 @@ async def on_message(message):
     match message.content.lower():
         case '!help':
             #make sure i update every time i add something
-            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate, !mommyasmr""")
+            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate, !mommyasmr, 6, """)
         case '!hello':
             #hello stuff
             helloMsg = ['Hey there!', 'Hello!', 'Hi there!', 'Hiya', 'BANANA', 'sup', 'I have no idea what is going on', 'Hi Earthling']
@@ -256,10 +257,6 @@ async def on_message(message):
         
         case 'die':
             await message.channel.send(f'KYS')
-
-        case '<@1492354981033017444>':
-            #self ping response
-            await message.channel.send('You rang?')
 
         case '!balance':
             #checks a users balance
@@ -328,6 +325,8 @@ async def on_message(message):
             url = await get_youtube_video('mommy asmr')
             await message.channel.send(f'you werido. still listening to that? dont you have a girlfriend to whisper to you instead...? well. here you go i guess. {url}')
         
+        case '6':
+            await message.channel.send(f'7')
 
 
         case _:
@@ -343,6 +342,8 @@ async def on_message(message):
     if 'mcdonald' in message.content.lower():
         await message.channel.send('mcdondalds')
 
+    if '<@1492354981033017444>' in message.contnet.lower():
+        await message.channel.send('You rang?')
     
 
 
