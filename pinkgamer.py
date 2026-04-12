@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+botId = '1492354981033017444'
+
+
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -125,13 +128,20 @@ async def blackjack(message, bet=None):
 
     # player's turn loop
     while True:
+        if sum(cards) == 21:
+                await message.channel.send('HOLY FUCKING SHIT MON, YOU DID BLACKED YOUR JACK. bowser would be proud')
+                update_balance(message.author.id, balance + (bet * 1.5))
+                return
+        
         await message.channel.send(f'Your total is {sum(cards)}. Hit or stand?')
         response = await client.wait_for('message', check=check)
-
+        
         if response.content.lower() == 'hit':
             value, ace = await draw_card(message, deck)
             cards.append(value)
             aces += ace
+            
+
             if sum(cards) > 21 and aces == 0:
                 await message.channel.send('You busted OWO! *I wins*.')
                 update_balance(message.author.id, balance - bet)
@@ -189,7 +199,7 @@ async def on_ready():
     print(f'Logged in as {client.user}')
     bot_command_channel = client.get_channel(1443682362528632913)
     await bot_command_channel.send('I am ready! (bots on <@585178815253446685>)')
-
+    
 
 @client.event
 async def on_message(message):
@@ -342,7 +352,7 @@ async def on_message(message):
     if 'mcdonald' in message.content.lower():
         await message.channel.send('mcdondalds')
 
-    if '<@1492354981033017444>' in message.contnet.lower():
+    if f'<@{botId}>' in message.content:
         await message.channel.send('You rang?')
     
 
