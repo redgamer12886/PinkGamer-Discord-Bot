@@ -4,6 +4,7 @@ import discord
 import os
 import random
 import time
+import asyncio
 
 from dotenv import load_dotenv
 
@@ -46,6 +47,7 @@ def update_balance(user_id, amount):
 #strickty for use in blackjack function
 async def draw_card(message, deck):
     card = deck.pop()
+    aces = 0
     await message.channel.send(f'Drew: {card}')
     if card.startswith(('J', 'Q', 'K')):
         value = 10
@@ -53,20 +55,26 @@ async def draw_card(message, deck):
         #checks for ace or jack, or queen, or king, and assigns the value accordingly. will do extra ace logic later
     elif card.startswith('A'):
         value = 11
+        aces += 1
     else:
         value = int(card[:-1])
 
-    return value
+    return value, aces
 
 #blackjack function
-async def blackjack(message):
-    await message.channel.send('How much do you want to bet?')
-    
+async def blackjack(message, bet=None):
+
     def check(m):
         return m.author == message.author and m.channel == message.channel
     
-    response = await client.wait_for('message', check=check)
-    bet = int(response.content)
+    #if bet is none, get it from the user
+    if bet is None:
+        await message.channel.send('How much do you want to bet?')
+        response = await client.wait_for('message', check=check)
+        bet = int(response.content)
+     
+        
+    
     if(bet < 0):
         await message.channel.send('You lil slyyy bitch, you think your better than everyone else? trying to cheat the system? cant belive you. Dumbass')
         return
@@ -86,10 +94,14 @@ async def blackjack(message):
     
 
     cards = []
-
+    aces = 0
     # deal 2 cards to start
-    cards.append(await draw_card(message, deck))
-    cards.append(await draw_card(message, deck))
+    value, ace = await draw_card(message, deck)
+    cards.append(value)
+    aces += ace
+    value, ace = await draw_card(message, deck)
+    cards.append(value)
+    aces += ace
 
     # player's turn loop
     while True:
@@ -97,20 +109,37 @@ async def blackjack(message):
         response = await client.wait_for('message', check=check)
 
         if response.content.lower() == 'hit':
-            cards.append(await draw_card(message, deck))
-            if sum(cards) > 21:
+            value, ace = await draw_card(message, deck)
+            cards.append(value)
+            aces += ace
+            if sum(cards) > 21 and aces == 0:
                 await message.channel.send('You busted OWO! *I wins*.')
                 update_balance(message.author.id, balance - bet)
                 return  # end the game
+            #if ace in your hand. then it changes it to a 1 if you would have busted
+            elif sum(cards) > 21 and aces > 0:
+                cards[cards.index(11)] = 1
+                aces -= 1
+
 
         elif response.content.lower() == 'stand':
             await message.channel.send('You chose to stand. MY TURN!')
+            dealeraces = 0
             dealercards = []
-            dealercards.append(await draw_card(message, deck))
+            value, ace = await draw_card(message, deck)
+            dealercards.append(value)
+            dealeraces += ace
 
             while sum(dealercards) < 17:
-                dealercards.append(await draw_card(message, deck))
-
+                value, ace = await draw_card(message, deck)
+                dealercards.append(value)
+                dealeraces += ace
+                #ace logic for dealer
+                while sum(dealercards) > 21 and dealeraces > 0:
+                    dealercards[dealercards.index(11)] = 1
+                    dealeraces -= 1
+            
+            
             playertotal = sum(cards)
             dealertotal = sum(dealercards)
 
@@ -144,6 +173,9 @@ async def on_ready():
 @client.event
 async def on_message(message):
 
+    if message.author == client.user: 
+        return
+
     #all the text commands for all the stuff sit does
 
     def check(m):
@@ -165,26 +197,40 @@ async def on_message(message):
         case 'penis':
             #penis line
             await message.channel.send('show it to me *NOW*')
-        case 'expensive':
-            #greyson ideas
-            await message.channel.send('kidna espesive')
-
-        case 'mcdonald':
-            await message.channel.send('mcdondalds')
-
-        case '!blackjack' | 'jackblack':
+    
+        case s if s.startswith('!blackjack') or s.startswith('!jackblack'):
             await message.channel.send('Ohhhhhh a game of blackjack you wanna play I see, alright. Im gonna destroy you!')
-            await blackjack(message)
+            parts = message.content.split()
+            if len(parts) > 1:
+                try:
+                    bet = int(parts[1])
+                    await blackjack(message, bet)
+                except ValueError:
+                    await message.channel.send('I only accept MONEY as a bet. nothing else')
+            else:
+                await blackjack(message)
+            
 
-        case '!guessroll':
+        case s if s.startswith('!guessroll'):
             rolled = roll()
-            await message.channel.send('whatcha guess?')
-            response = await client.wait_for('message', check=check)
+
+            parts = message.content.split()
+            if len(parts) > 1:
+                try:
+                    response = int(parts[1])
+                except ValueError:
+                    await message.channel.send('I dont have a die that can roll that')
+            else:
+                await message.channel.send('whatcha guess?')
+                response = await client.wait_for('message', check=check)
+                response = int(response.content)
+            
+            
             if response == rolled:
                 await message.channel.send(f'holy fucking shit your a wizard <@{message.author.id}>')
             else:
                 await message.channel.send(f'OMG YOUR SO SMART <@{message.author.id}>')
-                time.sleep(5)
+                await asyncio.sleep(5)
                 await message.channel.send(f'nvm fuckin dumbass, you really thought you got that? EVERYONE CLOWN ON <@{message.author.id}> FOR BEINGS SO STUPID')
                 await message.channel.send(f'the roll was {rolled} dumbass')
         
@@ -209,8 +255,11 @@ async def on_message(message):
             await message.channel.send('just this one e')
 
         case '!beg':
-            await message.channel.send(f'You would wouldnt you, lil bitch. fucking poor. imaging needing to beg from ME. Ill petty you this one time')
-            update_balance(message.author.id, get_balance(message.author.id) + 1)  # Add $1 to the user's balance
+            begamount = [1, 1, 1, 5, 10, 5, 2, 3, 1, 1, 1, 1, 10, 3, 4, 5, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 10]
+            choice = random.choice(begamount)
+            await message.channel.send(f'You would wouldnt you, lil bitch. fucking poor. imaging needing to beg from ME. Ill pitty you this one time. Heres ${choice}')
+
+            update_balance(message.author.id, get_balance(message.author.id) + choice )  # Add $1 to the user's balance
         
         case '!quote':
             #pulls from my qoutes channel
@@ -259,7 +308,7 @@ async def on_message(message):
 
     
     #if the word is contained within the message
-    
+
     if 'expensive' in message.content.lower():
         await message.channel.send('kidna espesive')
 
