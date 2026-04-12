@@ -6,6 +6,7 @@ import time
 import asyncio
 
 
+
 from discord.ext import tasks
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
@@ -50,6 +51,91 @@ conn = sqlite3.connect('bank.db')
 c = conn.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER, invested FLOAT DEFAULT 0)')
 conn.commit()
+
+
+c.execute("DELETE FROM users WHERE user_id LIKE '<Message%'")
+conn.commit()
+
+def loose(user, bet):
+    update_balance(user, get_balance(user) - bet)
+
+def win(user, bet):
+    update_balance(user, get_balance(user) + bet)
+
+
+async def RPS(message, bet=None):
+    def check(m):
+        return m.author == message.author and m.channel == message.channel
+    user = message.author.id
+    #if bet is none, get it from the user
+    if bet is None:
+        await message.channel.send('How much do you want to bet?')
+        response = await client.wait_for('message', check=check)
+        bet = int(response.content)
+
+    #balance checks 
+    if(bet < 0):
+        await message.channel.send('You lil slyyy bitch, you think your better than everyone else? trying to cheat the system? cant belive you. Dumbass')
+        return
+
+
+    balance = get_balance(message.author.id)
+    if bet > balance:
+        await message.channel.send('You don\'t have enough money!')
+        return
+
+    await message.channel.send('rock paper or scissors?')
+    response = await client.wait_for('message', check=check)
+    rps = str(response.content)
+
+    botarray = ['rock', 'paper', 'scissors']
+    botanswer = random.choice(botarray)
+
+
+    await message.channel.send(f'I picked {botanswer}')
+
+    if rps.lower().startswith('rock'):
+        if botanswer == 'rock':
+            await message.channel.send('We drew.. your lucky')
+            return
+        elif botanswer == 'paper':
+            await message.channel.send('HA FUCK YOU I WIN, PAPER COVERS ROCK SO HARD')
+            loose(user, bet)
+        else:
+            await message.channel.send('fuck. i lost. just this one time.. rock crushes scissors')
+            win(user, bet)
+    
+    elif rps.lower().startswith('paper'):
+        if botanswer == 'rock':
+            await message.channel.send('fuck. i lost. just this one time.. paper covers rock')
+            win(user,bet)
+            return
+        elif botanswer == 'paper':
+            await message.channel.send('We drew.. your lucky')
+        else:
+            await message.channel.send('HA FUCK YOU I WIN, SCISSORS CUTS TF OUTA PAPER')
+            loose(user, bet)
+
+    elif rps.lower().startswith('scissors'):
+        if botanswer == 'rock':
+            await message.channel.send('HA FUCK YOU I WIN, ROCK CRUSHES YOUR SCISSORS JUST LIKE I CRUSHED YOUR MOM IN BED')
+            loose(user,bet)
+            return
+        elif botanswer == 'paper':
+            await message.channel.send('fuck. i lost. just this one time.. scissors cut paper...')
+            win(user, bet)
+        else:
+            await message.channel.send('We drew.. your lucky')
+            return
+    else:
+        await message.channel.send('thats not a valid option dumbass')
+
+
+
+
+
+    #win loss for rock paper scissors
+
 
 
 #invest helper functions
@@ -169,7 +255,7 @@ async def blackjack(message, bet=None):
 
             if sum(cards) > 21 and aces == 0:
                 await message.channel.send('You busted OWO! *I wins*.')
-                update_balance(message.author.id, balance - bet)
+                loose(message.author.id,bet)
                 return  # end the game
             #if ace in your hand. then it changes it to a 1 if you would have busted
             elif sum(cards) > 21 and aces > 0:
@@ -200,13 +286,13 @@ async def blackjack(message, bet=None):
 
             if dealertotal > 21:
                 await message.channel.send('I busted OWO! *You wins*.')
-                update_balance(message.author.id, balance + bet)
+                win(message.author.id,bet)
             elif playertotal > dealertotal:
                 await message.channel.send('fuck. you win.')
-                update_balance(message.author.id, balance + bet)
+                win(message.author.id,bet)
             elif playertotal < dealertotal:
                 await message.channel.send('FUCK YEAEAAAAAA SUCK IT BIOTCHCH I WON.')
-                update_balance(message.author.id, balance - bet)
+                win(message.author.id,bet)
             else:
                 await message.channel.send('its a tie...')
             return  # end the game
@@ -257,7 +343,8 @@ async def on_message(message):
     match message.content.lower():
         case '!help':
             #make sure i update every time i add something
-            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate, !mommyasmr, 6, !invest, !getinvested, !sellinvested""")
+            await message.channel.send("""Available commands: 
+!help, !hello, !joke, !letslarp, !quote, !8ball, !uwu, !mommyasmr, !daddyasmr, !roll, !guessroll, !rps, !blackjack, !balance, !beg, !donate, !invest, !getinvested, !sellinvested, !leaderboard, @me (PinkGamer), penis, die, expensive, mcdonald, 6, goodnight""")
         case '!hello':
             #hello stuff
             helloMsg = ['Hey there!', 'Hello!', 'Hi there!', 'Hiya', 'BANANA', 'sup', 'I have no idea what is going on', 'Hi Earthling']
@@ -498,11 +585,69 @@ async def on_message(message):
             else:
                 await message.channel.send('You don\'t have permission to do that!')        
         
+        case '!uwu':
+            
+            uwu = ['https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGZ5M2RnZW5zbnpic3B6NHk4aTRpYnIwYzdoNzJmNDV3cGlqcjN6MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/nXy2VIqUP8caHjDheV/giphy.gif',
+                   'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYWVwMHh0ZHNpbXRnOXA2ZmMzYXNpbGFoYjljZWhkeTR0Mno1aXo4aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/AR6goyT6NE9e3CqmqW/giphy.gif',
+                   'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExcmhqNDExdnNrdGZkaXkzbnY5cDloOGFyN203NzVqaGJtMmNqYnl6ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fe8oe4XGRNYpEysGj7/giphy.gif',
+                   'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NTFvYTNwemV2a3Fwd3ZldnpyYThqNDJhYWlyM3k5cTBmM29lbjRrOSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/JPcUECC1kA0um34kFw/giphy.gif',
+                   'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeGtpOHAzemQxYjBwaHNnZ2prYzA2d2d3MnFjaGkybW53dGkyaDY4ciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yprzrPVHIK1QNJngve/giphy.gif',
+                   'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bnlyeGpzdGV3cGhhdjVwYzFjMHRob25yMG9qeGR5djY4cG1rdm52YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/jBCsvJ7tWea7QSuFWm/giphy.gif',
+                   'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bnlyeGpzdGV3cGhhdjVwYzFjMHRob25yMG9qeGR5djY4cG1rdm52YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/J509hr2j0oMejwlKOS/giphy.gif',
+                   'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeWd4NGYwczV5ZzQxdXhlaWJhaW1idXhjaHZodzFqYmI3bjd6ZTRuOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/N56wAElDGIJgJ35ijc/giphy.gif',
+                   'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Z3NucmhnM281cXg5dnlxbnJ6aDkwNGw3dzJ0ZncwOXk0c21peGJ6ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DhbZy2EKyVjJ8zPfY3/giphy.gif',
+                   'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3czU1NThlNHNlZ3ZnbnJ4Ymh4ZWcwZ3JzNnNzczhpMDFkNmJ6Nmp4YyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ldgC6CU984lmMc2LaG/giphy.gif',
+                   'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmtzenBmMHRhcGVhYXBlcnc0MXVvbGE0OGV1YzZtcWs5bHNpd2F1dCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/oHxvbzgmkQa4DVwAu1/giphy.gif']
+            await message.channel.send(random.choice(uwu))
+
+        case s if s.startswith('!8ball'):
+            ball = ['Yes', 'No', 'Maybe', '5 bucks is 5 bucks', 'dont even think about it']
+            await message.channel.send(random.choice(ball))
+
+
+        #rock paper scissors game
+        case s if s.startswith('!rps'):
+            await message.channel.send('Ohhhhhh a game of rock paper scissors. THE classic ro sham bo')
+            parts = message.content.split()
+            if len(parts) > 1:
+                try:
+                    bet = int(parts[1])
+                    await RPS(message, bet)
+                except ValueError:
+                    await message.channel.send('I only accept MONEY as a bet. nothing else')
+            else:
+                await RPS(message)
+
+
+
+        case '!daddyasmr':
+                url = await get_youtube_video('daddy asmr')
+                await message.channel.send(f'you werido. still listening to that? dont you have a boyfriend to whisper to you instead...? well. here you go i guess. {url}')
+
+            
+        case '!leaderboard':
+            c.execute('SELECT user_id, balance, invested FROM users ORDER BY (balance + invested) DESC LIMIT 5')
+            results = c.fetchall()
+            
+            if len(results) == 0:
+                await message.channel.send('No one has any money! (somethings probably wrong)')
+                return
+            
+            leaderboard = '🏆 **Leaderboard** 🏆\n'
+            for i, (user_id, balance, invested) in enumerate(results, 1):
+                total = int(balance + invested)
+                user = client.get_user(int(user_id))
+                username = user.display_name if user else 'Unknown'
+                leaderboard += f'{i}. {username} - ${total}\n'
+
+            await message.channel.send(leaderboard)        
+        
+        
         case _:
             pass
         
-
     
+
     #if the word is contained within the message
 
     if 'expensive' in message.content.lower():
@@ -514,6 +659,9 @@ async def on_message(message):
     if f'<@{botId}>' in message.content:
         await message.channel.send('You rang?')
     
+    if 'goodnight' in message.content.lower():
+        username = message.author.display_name
+        await message.channel.send(f'goodnight {username}')
 
 
 
