@@ -150,7 +150,7 @@ async def on_message(message):
         return m.author == message.author and m.channel == message.channel
 
 
-
+    #for all commands that are exactly that message
     match message.content.lower():
         case '!help':
             #make sure i update every time i add something
@@ -211,6 +211,7 @@ async def on_message(message):
         case '!beg':
             await message.channel.send(f'You would wouldnt you, lil bitch. fucking poor. imaging needing to beg from ME. Ill petty you this one time')
             update_balance(message.author.id, get_balance(message.author.id) + 1)  # Add $1 to the user's balance
+        
         case '!quote':
             #pulls from my qoutes channel
             quotes_channel = client.get_channel(1435661484712657008)
@@ -218,7 +219,7 @@ async def on_message(message):
             async for msg in quotes_channel.history(limit=5000):
                 messages.append(msg)
             quote = random.choice(messages)
-            await message.channel.send(f'"{quote.content}"')
+            await message.channel.send(f'{quote.content}')
 
         case '!donate':
             #donate money to someone else
@@ -254,6 +255,19 @@ async def on_message(message):
                 await message.channel.send(f'Good job <@{startuser}> your such a good person for helping out <@{pooruser}> and giving them ${amount}!')
         case _:
             pass
+        
+
+    
+    #if the word is contained within the message
+    
+    if 'expensive' in message.content.lower():
+        await message.channel.send('kidna espesive')
+
+    if 'mcdonald' in message.content.lower():
+        await message.channel.send('mcdondalds')
+
+    
+
 
 
 
