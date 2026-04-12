@@ -6,10 +6,13 @@ import random
 import time
 import asyncio
 
+
+from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -22,14 +25,30 @@ client = discord.Client(intents=intents)
 
 
 
+#youtube searching
+async def get_youtube_video(query):
+    youtube = build('youtube', 'v3', developerKey = YOUTUBE_API_KEY)
+    request = youtube.search().list(
+        q=query,
+        part='snippet',
+        type='video',
+        maxResults=20
+    )
+    response = request.execute()
+    videos = response['items']
+    video = random.choice(videos)
+    video_id = video['id']['videoId']
+    return f'https://www.youtube.com/watch?v={video_id}'
+
+
+
 #database setup for bank system, will add more later
 conn = sqlite3.connect('bank.db')
 c = conn.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER)')
 conn.commit()
 
-
-
+#get bal for the moeny stuff
 def get_balance(user_id):
     c.execute('SELECT balance FROM users WHERE user_id = ?', (str(user_id),))
     result = c.fetchone()
@@ -39,6 +58,7 @@ def get_balance(user_id):
         return 100
     return result[0]
 
+#update bal for moeny stuff
 def update_balance(user_id, amount):
     c.execute('UPDATE users SET balance = ? WHERE user_id = ?', (amount, str(user_id)))
     conn.commit()
@@ -186,7 +206,7 @@ async def on_message(message):
     match message.content.lower():
         case '!help':
             #make sure i update every time i add something
-            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate""")
+            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate, !mommyasmr""")
         case '!hello':
             #hello stuff
             helloMsg = ['Hey there!', 'Hello!', 'Hi there!', 'Hiya', 'BANANA', 'sup', 'I have no idea what is going on', 'Hi Earthling']
@@ -302,6 +322,14 @@ async def on_message(message):
                 update_balance(pooruser, get_balance(pooruser) + amount)
                 update_balance(startuser, get_balance(startuser) - amount)
                 await message.channel.send(f'Good job <@{startuser}> your such a good person for helping out <@{pooruser}> and giving them ${amount}!')
+        
+        #i dont even know anymore... pulss a youtube video. and now i can search yt. pretty neat
+        case '!mommyasmr':
+            url = await get_youtube_video('mommy asmr')
+            await message.channel.send(f'you werido. still listening to that? dont you have a girlfriend to whisper to you instead...? well. here you go i guess. {url}')
+        
+
+
         case _:
             pass
         

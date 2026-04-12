@@ -7,6 +7,7 @@ A custom Discord bot built with Python.
 ### Requirements
 - Python 3.10+
 - pip
+- google-api-python-client
 
 ### Installation
 
