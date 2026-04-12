@@ -151,136 +151,109 @@ async def on_message(message):
 
 
 
+    match message.content.lower():
+        case '!help':
+            #make sure i update every time i add something
+            await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate""")
+        case '!hello':
+            #hello stuff
+            helloMsg = ['Hey there!', 'Hello!', 'Hi there!', 'Hiya', 'BANANA', 'sup', 'I have no idea what is going on', 'Hi Earthling']
+            await message.channel.send(random.choice(helloMsg))
+        case '!roll':
+            #rolls a d20
+            await message.channel.send(f'🎲 You rolled a {roll()} from a d20!')
+        case 'penis':
+            #penis line
+            await message.channel.send('show it to me *NOW*')
+        case 'expensive':
+            #greyson ideas
+            await message.channel.send('kidna espesive')
 
-    if message.author == client.user:
-        return
+        case 'mcdonald':
+            await message.channel.send('mcdondalds')
 
+        case '!blackjack' | 'jackblack':
+            await message.channel.send('Ohhhhhh a game of blackjack you wanna play I see, alright. Im gonna destroy you!')
+            await blackjack(message)
 
-
-    #make sure i update every time i add something
-    if message.content == '!help':
-        await message.channel.send("""Available commands: !hello, !roll, !help, penis, expensive, mcdonald, !blackjack, !guessroll, die, pinging the bot, !joke, !balance, !letslarp, !quote, !beg, !donate""")
-
-
-
-    #hello command
-    if message.content == '!hello':
-        helloMsg = ['Hey there!', 'Hello!', 'Hi there!', 'Hiya', 'BANANA', 'sup', 'I have no idea what is going on', 'Hi Earthling']
-        await message.channel.send(random.choice(helloMsg))
-
-
-
-    #revisit later to make cooler rolling system
-    if message.content == '!roll':
-        await message.channel.send(f'🎲 You rolled a {roll()} from a d20!')
-    
-    #penis line
-    if message.content == 'penis':
-        await message.channel.send('show it to me *NOW*')
-    
-
-
-    # greysons ideas
-    if 'expensive' in message.content.lower(): 
-        await message.channel.send('kidna espesive')
-
-
-    
-    if 'mcdonald' in message.content.lower():
-        await message.channel.send('mcdondalds')
-
-
-
-    if message.content == '!blackjack' or message.content == '!jackblack':
-        await message.channel.send('Ohhhhhh a game of blackjack you wanna play I see, alright. Im gonna destroy you!')
-        await blackjack(message)
-
-
-
-    if message.content == '!guessroll':
-        rolled = roll()
-        await message.channel.send('whatcha guess?')
-        response = await client.wait_for('message', check=check)
-        if response == rolled:
-            await message.channel.send(f'holy fucking shit your a wizard <@{message.author.id}>')
-        else:
-            await message.channel.send(f'OMG YOUR SO SMART <@{message.author.id}>')
-            time.sleep(5)
-            await message.channel.send(f'nvm fuckin dumbass, you really thought you got that? EVERYONE CLOWN ON <@{message.author.id}> FOR BEINGS SO STUPID')
-            await message.channel.send(f'the roll was {rolled} dumbass')
-
-
-
-    if 'die' in message.content.lower():
-        await message.channel.send(f'KYS')
-
-    #self ping response
-    if '<@1492354981033017444>' in message.content:
-        await message.channel.send('You rang?')
-
-
-
-    #i set up a whole database with user balances
-    if message.content == '!balance':
-        balance = get_balance(message.author.id)
-        await message.channel.send(f'<@{message.author.id}> you have ${balance}')
-
-
-
-    #dad joke
-    if message.content == '!joke':
-        await message.channel.send('Dad')
-
-    #bossdrobots idea. No clue what it means
-    if message.content == '!letslarp':
-        await message.channel.send('just this one e')
-
-    if message.content == '!beg':
-        await message.channel.send(f'You would wouldnt you, lil bitch. fucking poor. imaging needing to beg from ME. Ill petty you this one time')
-        update_balance(message.author.id, get_balance(message.author.id) + 1)  # Add $1 to the user's balance
-
-
-    #pulls from my qoutes channel
-    if message.content == '!quote':
-        quotes_channel = client.get_channel(1435661484712657008)
-        messages = []
-        async for msg in quotes_channel.history(limit=5000):
-            messages.append(msg)
-        quote = random.choice(messages)
-        await message.channel.send(f'"{quote.content}" - {quote.author.display_name}')
-
-    #donate money
-    if message.content == '!donate':
-        startuser = message.author.id
-
-        await message.channel.send(f'OH BOYYY LOOK AT MR MONEY BAGS HERE, your so sweet on giving money to someone, who would you like to give money too? (@ them)')
+        case '!guessroll':
+            rolled = roll()
+            await message.channel.send('whatcha guess?')
+            response = await client.wait_for('message', check=check)
+            if response == rolled:
+                await message.channel.send(f'holy fucking shit your a wizard <@{message.author.id}>')
+            else:
+                await message.channel.send(f'OMG YOUR SO SMART <@{message.author.id}>')
+                time.sleep(5)
+                await message.channel.send(f'nvm fuckin dumbass, you really thought you got that? EVERYONE CLOWN ON <@{message.author.id}> FOR BEINGS SO STUPID')
+                await message.channel.send(f'the roll was {rolled} dumbass')
         
-        response = await client.wait_for('message', check=check)
-        if len(response.mentions) == 0:
-            await message.channel.send('You need to @ someone!')
-            return
-        else:
-            pooruser = response.mentions[0].id
+        case 'die':
+            await message.channel.send(f'KYS')
 
-        await message.channel.send('How much would you like to give deary?')
-        response = await client.wait_for('message', check=check)
+        case '<@1492354981033017444>':
+            #self ping response
+            await message.channel.send('You rang?')
 
-        try:
-            amount = int(response.content)
-        except ValueError:
-            await message.channel.send('That\'s not a number dummy!')
-            return
-        #checking for neg amounts
-        if amount < 0:
-            await message.channel.send(f'tsk tsk, trying to rob someone i see. maybe a future command.... <@{pooruser}> <@{startuser}> IS TRYING TO ROB YOU. RUNN FOR YOUR FUCKING LIFE')
-            return
-        userbal = get_balance(startuser)
-        if userbal < amount:
-            await message.channel.send(f'I know <@{pooruser}> is broke, but dont break yourself helping them!')
-        else:
-            update_balance(pooruser, get_balance(pooruser) + amount)
-            update_balance(startuser, get_balance(startuser) - amount)
-            await message.channel.send(f'Good job <@{startuser}> your such a good person for helping out <@{pooruser}> and giving them ${amount}!')
+        case '!balance':
+            #checks a users balance
+            balance = get_balance(message.author.id)
+            await message.channel.send(f'<@{message.author.id}> you have ${balance}')
+
+        case '!joke':
+            #dad joke
+            await message.channel.send('Dad')
+        
+        case '!letslarp':
+            #bossdrobots idea. No clue what it means
+            await message.channel.send('just this one e')
+
+        case '!beg':
+            await message.channel.send(f'You would wouldnt you, lil bitch. fucking poor. imaging needing to beg from ME. Ill petty you this one time')
+            update_balance(message.author.id, get_balance(message.author.id) + 1)  # Add $1 to the user's balance
+        case '!quote':
+            #pulls from my qoutes channel
+            quotes_channel = client.get_channel(1435661484712657008)
+            messages = []
+            async for msg in quotes_channel.history(limit=5000):
+                messages.append(msg)
+            quote = random.choice(messages)
+            await message.channel.send(f'"{quote.content}"')
+
+        case '!donate':
+            #donate money to someone else
+            startuser = message.author.id
+
+            await message.channel.send(f'OH BOYYY LOOK AT MR MONEY BAGS HERE, your so sweet on giving money to someone, who would you like to give money too? (@ them)')
+            
+            response = await client.wait_for('message', check=check)
+            if len(response.mentions) == 0:
+                await message.channel.send('You need to @ someone!')
+                return
+            else:
+                pooruser = response.mentions[0].id
+
+            await message.channel.send('How much would you like to give deary?')
+            response = await client.wait_for('message', check=check)
+
+            try:
+                amount = int(response.content)
+            except ValueError:
+                await message.channel.send('That\'s not a number dummy!')
+                return
+            #checking for neg amounts
+            if amount < 0:
+                await message.channel.send(f'tsk tsk, trying to rob someone i see. maybe a future command.... <@{pooruser}> <@{startuser}> IS TRYING TO ROB YOU. RUNN FOR YOUR FUCKING LIFE')
+                return
+            userbal = get_balance(startuser)
+            if userbal < amount:
+                await message.channel.send(f'I know <@{pooruser}> is broke, but dont break yourself helping them!')
+            else:
+                update_balance(pooruser, get_balance(pooruser) + amount)
+                update_balance(startuser, get_balance(startuser) - amount)
+                await message.channel.send(f'Good job <@{startuser}> your such a good person for helping out <@{pooruser}> and giving them ${amount}!')
+        case _:
+            pass
 
 
 
