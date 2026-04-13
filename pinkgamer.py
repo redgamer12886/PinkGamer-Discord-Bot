@@ -996,7 +996,8 @@ Related Commands: !invest, !sellinvested, !work""")
                     if target_balance == 0:
                         await message.channel.send('they\'re broke, nothing to steal!')
                         return
-                    
+
+                    #LINE 1000!!!!!!!!!!!!! WOOOOOOOOOOO
                     steal_percent = random.randint(10, 30)
                     stolen = int(target_balance * (steal_percent / 100))
                     
