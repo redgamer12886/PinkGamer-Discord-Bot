@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 4. Create a `.env` file in the project root
 DISCORD_TOKEN=your_token_here
-
+YOUTUBE_API_KEY=your_api_key
 5. Run the bot
 
 
