@@ -988,7 +988,7 @@ Related Commands: !invest, !sellinvested, !work""")
                         c.execute('UPDATE users SET active_locks = ? WHERE user_id = ?', (target_locks - 1, str(target_id)))
                         conn.commit()
                         remove_item(user_id, 1)
-                        await message.channel.send(f'they had a lock! your lockpick broke and their lock was used up. <@{target_id}> is safe... this time')
+                        await message.channel.send(f'they had a lock! your lockpick broke and their lock was used up. {client.get_user(int(target_id))} is safe... this time')
                         return
                     
                     # steal a random % of their balance
@@ -997,14 +997,14 @@ Related Commands: !invest, !sellinvested, !work""")
                         await message.channel.send('they\'re broke, nothing to steal!')
                         return
 
-                    #LINE 1000!!!!!!!!!!!!! WOOOOOOOOOOO
+                    #LINE 1000!!!!!!!!!!!!! WOOOOOOOOOOO    penis
                     steal_percent = random.randint(10, 30)
                     stolen = int(target_balance * (steal_percent / 100))
                     
                     remove_item(user_id, 1)
                     update_balance(target_id, target_balance - stolen)
                     update_balance(user_id, get_balance(user_id) + stolen)
-                    await message.channel.send(f'you stole ${stolen} ({steal_percent}%) from <@{target_id}>! 😈')
+                    await message.channel.send(f'you stole ${stolen} ({steal_percent}%) from {client.get_user(int(target_id))}! 😈')
 
                 case _:
                     await message.channel.send(f'no item called {item_name}')
