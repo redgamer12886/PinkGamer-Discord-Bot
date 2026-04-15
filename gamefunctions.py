@@ -12,13 +12,6 @@ from database import update_balance, get_balance
 
 
 
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-client = discord.Client(intents=intents)
-
-
-
 # updates bal if user lost
 def loose(user, bet):
     update_balance(user, get_balance(user) - bet)
@@ -117,7 +110,7 @@ async def draw_card(message, deck):
 
 
 # Blackjack function
-async def blackjack(message, bet=None):
+async def blackjack(message, client, bet=None):
 
     def check(m):
         return m.author == message.author and m.channel == message.channel

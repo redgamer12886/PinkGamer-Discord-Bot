@@ -186,12 +186,11 @@ async def on_message(message):
             if len(parts) > 1:
                 try:
                     bet = int(parts[1])
-                    await blackjack(message, bet)
+                    await blackjack(message, client, bet)
                 except ValueError:
                     await message.channel.send('I only accept MONEY as a bet. nothing else')
             else:
-                await blackjack(message)
-            
+                await blackjack(message, client)
 
         case s if s.startswith('!guessroll'):
             rolled = roll()

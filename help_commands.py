@@ -120,8 +120,7 @@ Related Commands: !invest, !sellinvested, !work""")
                 await message.channel.send("**!use** - Uses an item in inventory. Help pages for items WIP")
 
 
-
-                                                                        
+                                                       
             case _:
                 await message.channel.send(f'no help page for {parts[1]} dummy')        
                 
