@@ -12,7 +12,7 @@ from database import update_balance, get_balance, get_invested, update_invested,
 
 from gamefunctions import RPS, blackjack, roll
 from database import c, conn, setup_database
-from help import help
+from help_commands import help_command
 
 
 
@@ -74,6 +74,9 @@ async def apply_interest():
 
 
 
+
+
+
 # On bot startup
 @client.event
 async def on_ready():
@@ -99,11 +102,10 @@ async def on_message(message):
     # for all commands that are exactly that message
     match message.content.lower():
         
-        
-        
         # Help pages
         case s if s.startswith('!help'):
-            help(message)
+            await message.channel.send('helping')
+            await help_command(message)
 
 
         case '!hello':

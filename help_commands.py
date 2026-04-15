@@ -11,7 +11,7 @@ import asyncio
 
 
 
-async def help(message):
+async def help_command(message):
 
     parts = message.content.split()
                 
