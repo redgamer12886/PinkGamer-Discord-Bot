@@ -5,11 +5,28 @@ import os
 import time
 import asyncio
 
+# importing from other files ive writen for better organization. 
+# gamefunctions is for functions related to games
+# databasefunctions is for functions related to the database. will add more as i go along
+from database import update_balance, get_balance, get_invested, update_invested, add_item, get_item_quantity, remove_item
+
+from gamefunctions import win, loose, RPS, blackjack, roll
+from database import c, conn, setup_database
+from help import help
+
+
+
+# sets up the database, creates tables if they dont exist, and adds default items to the shop. also removes any users that are actually messages (from when i fucked up and put a message object in there instead of a user id)
+setup_database()
+
+
 
 
 from discord.ext import tasks
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
+
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -24,10 +41,8 @@ intents.members = True
 client = discord.Client(intents=intents)
 
 
+
 work_cooldowns = {}
-
-
-
 
 
 
@@ -48,304 +63,6 @@ async def get_youtube_video(query):
 
 
 
-#database setup for bank system, will add more later
-conn = sqlite3.connect('bank.db')
-c = conn.cursor()
-c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER, invested FLOAT DEFAULT 0)')
-c.execute('CREATE TABLE IF NOT EXISTS items (item_id INTEGER PRIMARY KEY, name TEXT, price INTEGER, description TEXT)')
-c.execute('CREATE TABLE IF NOT EXISTS inventory (user_id TEXT, item_id INTEGER, quantity INTEGER)')
-c.execute("INSERT OR IGNORE INTO items VALUES (1, 'lockpick', 50, 'Attempt to steal money from someone')")
-c.execute("INSERT OR IGNORE INTO items VALUES (2, 'lock', 75, 'Protects you from being stolen from')")
-try:
-    c.execute('ALTER TABLE users ADD COLUMN active_locks INTEGER DEFAULT 0')
-except:
-    pass
-
-conn.commit()
-
-
-
-c.execute("DELETE FROM users WHERE user_id LIKE '<Message%'")
-conn.commit()
-
-
-
-# get quantity of a specific item a user owns
-def get_item_quantity(user_id, item_id):
-    c.execute('SELECT quantity FROM inventory WHERE user_id = ? AND item_id = ?', (str(user_id), item_id))
-    result = c.fetchone()
-    if result is None:
-        return 0
-    return result[0]
-
-# add item to user inventory
-def add_item(user_id, item_id, quantity=1):
-    existing = get_item_quantity(user_id, item_id)
-    if existing == 0:
-        c.execute('INSERT INTO inventory VALUES (?, ?, ?)', (str(user_id), item_id, quantity))
-    else:
-        c.execute('UPDATE inventory SET quantity = ? WHERE user_id = ? AND item_id = ?', (existing + quantity, str(user_id), item_id))
-    conn.commit()
-
-# remove item from user inventory
-def remove_item(user_id, item_id, quantity=1):
-    existing = get_item_quantity(user_id, item_id)
-    if existing <= quantity:
-        c.execute('DELETE FROM inventory WHERE user_id = ? AND item_id = ?', (str(user_id), item_id))
-    else:
-        c.execute('UPDATE inventory SET quantity = ? WHERE user_id = ? AND item_id = ?', (existing - quantity, str(user_id), item_id))
-    conn.commit()
-
-def loose(user, bet):
-    update_balance(user, get_balance(user) - bet)
-
-def win(user, bet):
-    update_balance(user, get_balance(user) + bet)
-
-
-async def RPS(message, bet=None):
-    def check(m):
-        return m.author == message.author and m.channel == message.channel
-    user = message.author.id
-    #if bet is none, get it from the user
-    if bet is None:
-        await message.channel.send('How much do you want to bet?')
-        response = await client.wait_for('message', check=check)
-        bet = int(response.content)
-
-    #balance checks 
-    if(bet < 0):
-        await message.channel.send('You lil slyyy bitch, you think your better than everyone else? trying to cheat the system? cant belive you. Dumbass')
-        return
-
-
-    balance = get_balance(message.author.id)
-    if bet > balance:
-        await message.channel.send('You don\'t have enough money!')
-        return
-
-    await message.channel.send('rock paper or scissors?')
-    response = await client.wait_for('message', check=check)
-    rps = str(response.content)
-
-    botarray = ['rock', 'paper', 'scissors']
-    botanswer = random.choice(botarray)
-
-
-    await message.channel.send(f'I picked {botanswer}')
-
-    if rps.lower().startswith('rock'):
-        if botanswer == 'rock':
-            await message.channel.send('We drew.. your lucky')
-            return
-        elif botanswer == 'paper':
-            await message.channel.send('HA FUCK YOU I WIN, PAPER COVERS ROCK SO HARD')
-            loose(user, bet)
-        else:
-            await message.channel.send('fuck. i lost. just this one time.. rock crushes scissors')
-            win(user, bet)
-    
-    elif rps.lower().startswith('paper'):
-        if botanswer == 'rock':
-            await message.channel.send('fuck. i lost. just this one time.. paper covers rock')
-            win(user,bet)
-            return
-        elif botanswer == 'paper':
-            await message.channel.send('We drew.. your lucky')
-        else:
-            await message.channel.send('HA FUCK YOU I WIN, SCISSORS CUTS TF OUTA PAPER')
-            loose(user, bet)
-
-    elif rps.lower().startswith('scissors'):
-        if botanswer == 'rock':
-            await message.channel.send('HA FUCK YOU I WIN, ROCK CRUSHES YOUR SCISSORS JUST LIKE I CRUSHED YOUR MOM IN BED')
-            loose(user,bet)
-            return
-        elif botanswer == 'paper':
-            await message.channel.send('fuck. i lost. just this one time.. scissors cut paper...')
-            win(user, bet)
-        else:
-            await message.channel.send('We drew.. your lucky')
-            return
-    else:
-        await message.channel.send('thats not a valid option dumbass')
-
-
-
-
-
-    #win loss for rock paper scissors
-
-
-
-#invest helper functions
-
-#gets invested amount
-def get_invested(user_id):
-    c.execute('SELECT invested FROM users WHERE user_id = ?', (str(user_id),))
-    result = c.fetchone()
-
-    if result is None:
-        return 0
-    return result[0]
-
-#update invested
-def update_invested(user_id, amount):
-    c.execute('UPDATE users SET invested = ? WHERE user_id = ?', (int(amount), str(user_id)))
-    conn.commit()
-
-
-
-
-
-
-
-#bank account helper functions
-#get bal for the moeny stuff
-def get_balance(user_id):
-    c.execute('SELECT balance FROM users WHERE user_id = ?', (str(user_id),))
-    result = c.fetchone()
-    if result is None:
-        c.execute('INSERT INTO users (user_id, balance) VALUES (?, ?)', (str(user_id), 100))
-        conn.commit()
-        return 100
-    return result[0]
-
-#update bal for moeny stuff
-def update_balance(user_id, amount):
-    c.execute('UPDATE users SET balance = ? WHERE user_id = ?', (amount, str(user_id)))
-    conn.commit()
-
-
-
-#strickty for use in blackjack function
-async def draw_card(message, deck):
-    card = deck.pop()
-    aces = 0
-    await message.channel.send(f'Drew: {card}')
-    if card.startswith(('J', 'Q', 'K')):
-        value = 10
-        
-        #checks for ace or jack, or queen, or king, and assigns the value accordingly. will do extra ace logic later
-    elif card.startswith('A'):
-        value = 11
-        aces += 1
-    else:
-        value = int(card[:-1])
-
-    return value, aces
-
-#blackjack function
-async def blackjack(message, bet=None):
-
-    def check(m):
-        return m.author == message.author and m.channel == message.channel
-    
-    #if bet is none, get it from the user
-    if bet is None:
-        await message.channel.send('How much do you want to bet?')
-        response = await client.wait_for('message', check=check)
-        bet = int(response.content)
-     
-        
-    
-    if(bet < 0):
-        await message.channel.send('You lil slyyy bitch, you think your better than everyone else? trying to cheat the system? cant belive you. Dumbass')
-        return
-    
-
-    balance = get_balance(message.author.id)
-    if bet > balance:
-        await message.channel.send('You don\'t have enough money!')
-        return
-    
-    
-    suits = ['♠', '♥', '♦', '♣']
-    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-    deck = [f'{rank}{suit}' for rank in ranks for suit in suits]
-    random.shuffle(deck)
-
-    
-
-    cards = []
-    aces = 0
-    # deal 2 cards to start
-    value, ace = await draw_card(message, deck)
-    cards.append(value)
-    aces += ace
-    value, ace = await draw_card(message, deck)
-    cards.append(value)
-    aces += ace
-
-    # player's turn loop
-    while True:
-        if sum(cards) == 21:
-                await message.channel.send('HOLY FUCKING SHIT MON, YOU DID BLACKED YOUR JACK. bowser would be proud')
-                update_balance(message.author.id, balance + (bet * 1.5))
-                return
-        
-        await message.channel.send(f'Your total is {sum(cards)}. Hit or stand?')
-        response = await client.wait_for('message', check=check)
-        
-        if response.content.lower() == 'hit':
-            value, ace = await draw_card(message, deck)
-            cards.append(value)
-            aces += ace
-            
-
-            if sum(cards) > 21 and aces == 0:
-                await message.channel.send('You busted OWO! *I wins*.')
-                loose(message.author.id,bet)
-                return  # end the game
-            #if ace in your hand. then it changes it to a 1 if you would have busted
-            elif sum(cards) > 21 and aces > 0:
-                cards[cards.index(11)] = 1
-                aces -= 1
-
-
-        elif response.content.lower() == 'stand':
-            await message.channel.send('You chose to stand. MY TURN!')
-            dealeraces = 0
-            dealercards = []
-            value, ace = await draw_card(message, deck)
-            dealercards.append(value)
-            dealeraces += ace
-
-            while sum(dealercards) < 17:
-                value, ace = await draw_card(message, deck)
-                dealercards.append(value)
-                dealeraces += ace
-                #ace logic for dealer
-                while sum(dealercards) > 21 and dealeraces > 0:
-                    dealercards[dealercards.index(11)] = 1
-                    dealeraces -= 1
-            
-            
-            playertotal = sum(cards)
-            dealertotal = sum(dealercards)
-
-            if dealertotal > 21:
-                await message.channel.send('I busted OWO! *You wins*.')
-                win(message.author.id,bet)
-            elif playertotal > dealertotal:
-                await message.channel.send('fuck. you win.')
-                win(message.author.id,bet)
-            elif playertotal < dealertotal:
-                await message.channel.send('FUCK YEAEAAAAAA SUCK IT BIOTCHCH I WON.')
-                loose(message.author.id,bet)
-            else:
-                await message.channel.send('its a tie...')
-            return  # end the game
-
-
-
-def roll():
-    result = random.randint(1, 20)
-    return result
-
-
-
-
 @tasks.loop(hours=6)
 async def apply_interest():
     bot_command_channel = client.get_channel(1443682362528632913)
@@ -356,9 +73,8 @@ async def apply_interest():
     await bot_command_channel.send('INVESTMENTS ARE PROFITABLE')
 
 
-    
 
-#on bot startup
+# On bot startup
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
@@ -369,139 +85,25 @@ async def on_ready():
 #on message is sent
 @client.event
 async def on_message(message):
-
+    # ignores messages from the bot itself
     if message.author == client.user: 
         return
 
-    #all the text commands for all the stuff sit does
+    # All the text commands for all the stuff it does
 
     def check(m):
+        
         return m.author == message.author and m.channel == message.channel
 
 
-    #for all commands that are exactly that message
+    # for all commands that are exactly that message
     match message.content.lower():
         
         
         
-        #help pages
+        # Help pages
         case s if s.startswith('!help'):
-            parts = message.content.split()
-            
-            if len(parts) == 1:
-                # general help page
-                await message.channel.send("""Available commands: 
-        !help, !hello, !joke, !letslarp, !quote, !8ball, !uwu, !mommyasmr, !daddyasmr, !roll, !guessroll, !rps, !blackjack, !balance, !beg, !donate, !invest, !getinvested, !sellinvested, !leaderboard, !work, @me (PinkGamer), penis, die, expensive, mcdonald, 6, goodnight, !shop, !buy, !inventory, !use
-                                            
-        Type !help <command> for more info on a specific command""")
-            
-            else:
-                # specific command help
-                match parts[1].lower():
-                    case 'blackjack' | 'jackblack':
-                        await message.channel.send("""**!blackjack** - Play a game of blackjack against me
-        Usage: !blackjack <bet> or just !blackjack and I'll ask you
-        Commands during game: hit, stand""")
-                    case 'rps':
-                        await message.channel.send("""**!rps** - Play rock paper scissors against me
-        Usage: !rps <bet> or just !rps and I'll ask you""")
-                    case 'invest':
-                        await message.channel.send("""**!invest** - Invest your money for 5% \returns every 6 hours
-        Usage: !invest <amount> or just !invest and I'll ask you
-        Related: !getinvested, !sellinvested""")
-                    case 'work':
-                        await message.channel.send("""**!work** - Makes you solve easy math questions for a little bit of mula. There will be penalties for stupidity!""")
-                    case 'donate':
-                        await message.channel.send("""**!donate** - Give money to someone else
-        Usage: !donate then I'll ask who and how much""")
-                    case 'beg':
-                        await message.channel.send("""**!beg** - Beg me for money. Maybe I'll give you some. Maybe not.""")
-                    
-                    case 'quote':
-                        await message.channel.send("""**!quote** - Will say a quote from quotes-made-by-ash""")
-                    
-                    case 'hello':
-                        await message.channel.send("""**!hello** - Says hello!""")
-                    
-                    case 'joke':
-                        await message.channel.send("""**!joke** - Tells a dad joke""")
-                    
-                    case '!letslarp':
-                        await message.channel.send("**!letslarp** - idfk, it was bossdro's idea")
-                    
-                    case '8ball':
-                        await message.channel.send("**!8ball** - ask the magic 8 ball any question")
-
-                    case 'uwu': 
-                        await message.channel.send("**!uwu** - What do you think it does...")
-
-                    case 'mommyasmr': 
-                        await message.channel.send("**!mommyasmr** - grabs a mommy asmr video from youtube")
-                    
-                    case 'daddyasmr':
-                        await message.channel.send("**!daddyasmr** - grabs a daddy asmr video from youtube")
-
-                    case 'roll':
-                        await message.channel.send("**!roll** - rolls a d20")
-
-                    case 'guessroll':
-                        await message.channel.send("**!guessroll** - try and guess what a d20 will roll")
-
-                    case 'balance':
-                        await message.channel.send("""**!balance** - checks your balance
-  Related Commands: !invest, !getinvested, !blackjack, !work""")
-                        
-                    case 'getinvested':
-                        await message.channel.send("""**!getinvested** - tells you how much money you have invested
-Related Commands: !invest, !sellinvested, !work""")
-                        
-                    case 'sellinvested':
-                        await message.channel.send("""**!sellinvested** - sells an amount of money that you have invested to get it back in your bank account""")
-
-                    case 'leaderboard':
-                        await message.channel.send("**!leaderboard** - shows a leaderboard of the top 5 richest people using this bot!")
-
-                    case 'penis':
-                        await message.channel.send("**penis** - penis command")
-
-                    case 'die':
-                        await message.channel.send("**die** - die command")
-                    
-                    case 'expensive':
-                        await message.channel.send("**expensive** - expensive command")
-                    
-                    case 'mcdonald':
-                        await message.channel.send("**mcdonald** - mcdonald command (im hungry)")
-                    
-                    case '6':
-                        await message.channel.send("**6** - 7")
-
-                    case 'goodnight':
-                        await message.channel.send("**goodnight** - tells whoever says goodnight, goodnight back")
-                    
-                    case 'shop':
-                        await message.channel.send("""**!shop** - Shows all items available to buy""")
-
-                    case 'buy':
-                        await message.channel.send("""**!buy** - Buy an item from the shop
-                    Usage: !buy <item name>""")
-
-                    case 'inventory':
-                        await message.channel.send("""**!inventory** - Shows all items you currently own""")
-
-                    case 'use':
-                        await message.channel.send("**!use** - Uses an item in inventory. Help pages for items WIP")
-
-
-
-                                                                     
-                    case _:
-                        await message.channel.send(f'no help page for {parts[1]} dummy')        
-            
-            
-
-
-
+            help(message)
 
 
         case '!hello':
@@ -516,7 +118,6 @@ Related Commands: !invest, !sellinvested, !work""")
             #penis line
             await message.channel.send('show it to me *NOW*')
     
-        
         case '!shop':
             # get all items from the shop
             c.execute('SELECT item_id, name, price, description FROM items')
@@ -533,7 +134,8 @@ Related Commands: !invest, !sellinvested, !work""")
             if len(parts) < 2:
                 await message.channel.send('Usage: !buy <item name>')
                 return
-            
+
+
             item_name = parts[1].lower()
             
             # check if item exists
@@ -626,7 +228,7 @@ Related Commands: !invest, !sellinvested, !work""")
         
         case '!letslarp':
             #bossdrobots idea. No clue what it means
-            await message.channel.send('just this one e')
+            await message.channel.send('just this one time')
 
         case '!beg':
             begamount = [1, 1, 1, 5, 10, 5, 2, 3, 1, 1, 1, 1, 10, 3, 4, 5, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 10]
@@ -997,7 +599,8 @@ Related Commands: !invest, !sellinvested, !work""")
                         await message.channel.send('they\'re broke, nothing to steal!')
                         return
 
-                    #LINE 1000!!!!!!!!!!!!! WOOOOOOOOOOO    penis
+
+
                     steal_percent = random.randint(10, 30)
                     stolen = int(target_balance * (steal_percent / 100))
                     
