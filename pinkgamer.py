@@ -10,7 +10,7 @@ import asyncio
 # databasefunctions is for functions related to the database. will add more as i go along
 from database import update_balance, get_balance, get_invested, update_invested, add_item, get_item_quantity, remove_item
 
-from gamefunctions import win, loose, RPS, blackjack, roll
+from gamefunctions import RPS, blackjack, roll
 from database import c, conn, setup_database
 from help import help
 

@@ -6,9 +6,18 @@ import time
 import asyncio
 
 
+
 # importing from other files ive writen for better organization.
 from database import update_balance, get_balance
-from pinkgamer import client
+
+
+
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+client = discord.Client(intents=intents)
+
+
 
 # updates bal if user lost
 def loose(user, bet):
