@@ -18,7 +18,7 @@ async def help_command(message):
     if len(parts) == 1:
                     # general help page
                     await message.channel.send("""Available commands: 
-            !help, !hello, !joke, !letslarp, !quote, !8ball, !uwu, !mommyasmr, !daddyasmr, !roll, !guessroll, !rps, !blackjack, !balance, !beg, !donate, !invest, !getinvested, !sellinvested, !leaderboard, !work, @me (PinkGamer), penis, die, expensive, mcdonald, 6, goodnight, !shop, !buy, !inventory, !use
+            !help, !hello, !joke, !letslarp, !quote, !8ball, !uwu, !mommyasmr, !daddyasmr, !roll, !guessroll, !rps, !blackjack, !balance, !beg, !donate, !invest, !getinvestment, !sellinvested, !leaderboard, !work, @me (PinkGamer), penis, die, expensive, mcdonald, 6, goodnight, !shop, !buy, !inventory, !use
                                                 
             Type !help <command> for more info on a specific command""")
                 
@@ -76,10 +76,10 @@ Usage: !donate then I'll ask who and how much""")
 
             case 'balance':
                 await message.channel.send("""**!balance** - checks your balance 
-Related Commands: !invest, !getinvested, !blackjack, !work""")
+Related Commands: !invest, !getinvestment, !blackjack, !work""")
                             
-            case 'getinvested':
-                await message.channel.send("""**!getinvested** - tells you how much money you have invested
+            case 'getinvestment':
+                await message.channel.send("""**!getinvestment** - tells you how much money you have invested
 Related Commands: !invest, !sellinvested, !work""")
                             
             case 'sellinvested':

@@ -22,7 +22,7 @@ def win(user, bet):
 
 
 # Rock paper scissors game with betting
-async def RPS(message, bet=None):
+async def RPS(message, client, bet=None):
     def check(m):
         return m.author == message.author and m.channel == message.channel
     user = message.author.id

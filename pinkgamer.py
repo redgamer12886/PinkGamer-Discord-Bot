@@ -13,7 +13,7 @@ from database import update_balance, get_balance, get_invested, update_invested,
 from gamefunctions import RPS, blackjack, roll
 from database import c, conn, setup_database
 from help_commands import help_command
-
+from superusercommands import superuser_commands
 
 
 # sets up the database, creates tables if they dont exist, and adds default items to the shop. also removes any users that are actually messages (from when i fucked up and put a message object in there instead of a user id)
@@ -131,6 +131,7 @@ async def on_message(message):
             
             await message.channel.send(shop)
 
+
         case s if s.startswith('!buy'):
             parts = message.content.split()
             if len(parts) < 2:
@@ -154,11 +155,15 @@ async def on_message(message):
             if balance < price:
                 await message.channel.send(f'you cant afford that, you need ${price} and you only have ${balance}')
                 return
-            
+
             # buy the item
             update_balance(message.author.id, balance - price)
             add_item(message.author.id, item_id)
             await message.channel.send(f'you bought a {item_name} for ${price}!')
+
+
+
+
 
         case '!inventory':
             # get all items in the user's inventory
@@ -218,7 +223,7 @@ async def on_message(message):
         case 'die':
             await message.channel.send(f'KYS')
 
-        case '!balance':
+        case ('!balance') | ('!bal'):
             #checks a users balance
             balance = get_balance(message.author.id)
             await message.channel.send(f'<@{message.author.id}> you have ${balance}')
@@ -387,25 +392,14 @@ async def on_message(message):
 
 
 
-        case '!getinvested':
+        case '!getinvestment':
             user_id = message.author.id
             username = message.author.display_name
             amount = get_invested(user_id)
             await message.channel.send(f'Ooo looky, {username} has ${amount} invested. Pretty hot')
 
-        #super user commands
-        case s if s.startswith('!fixuser'):
-            if message.author.id == 585178815253446685:
-                if len(message.mentions) == 0:
-                    await message.channel.send('You need to @ someone!')
-                    return
-                target_id = message.mentions[0].id
-                c.execute('UPDATE users SET balance = 100, invested = 0 WHERE user_id = ?', (str(target_id),))
-                conn.commit()
-                await message.channel.send(f'Fixed <@{target_id}>')
-            else:
-                await message.channel.send('You don\'t have permission to do that!')        
-        
+      
+                
         case '!uwu':
             
             uwu = ['https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGZ5M2RnZW5zbnpic3B6NHk4aTRpYnIwYzdoNzJmNDV3cGlqcjN6MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/nXy2VIqUP8caHjDheV/giphy.gif',
@@ -433,12 +427,11 @@ async def on_message(message):
             if len(parts) > 1:
                 try:
                     bet = int(parts[1])
-                    await RPS(message, bet)
+                    await RPS(message, client, bet)
                 except ValueError:
                     await message.channel.send('I only accept MONEY as a bet. nothing else')
             else:
-                await RPS(message)
-
+                await RPS(message, client)
 
 
         case '!daddyasmr':
@@ -475,7 +468,7 @@ async def on_message(message):
 
             def check(m):
                 return m.author == message.author and m.channel == message.channel
-            
+            reward = random.randint(5, 50)
             a = random.randint(1, 20)
             b = random.randint(1, 20)
             operator = random.choice(['+', '-', '*'])
@@ -486,6 +479,7 @@ async def on_message(message):
                 answer = a - b
             else:
                 answer = a * b
+                reward *= 2  # double the reward for multiplication since it's harder
             
             await message.channel.send(f'You want money? EARN IT. Whats {a} {operator} {b}?')
             
@@ -501,7 +495,7 @@ async def on_message(message):
                 return
             
             if guess == answer:
-                reward = random.randint(5, 50)
+                
                 update_balance(message.author.id, get_balance(message.author.id) + reward)
                 await message.channel.send(f'correct! here\'s ${reward} you earned it')
             else:
@@ -616,7 +610,7 @@ async def on_message(message):
         case _:
             pass
         
-    
+    superuser_commands(message)
 
     #if the word is contained within the message
 
