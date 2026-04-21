@@ -19,7 +19,7 @@ from superusercommands import superuser_commands
 
 # sets up the database, creates tables if they dont exist, and adds default items to the shop. also removes any users that are actually messages (from when i fucked up and put a message object in there instead of a user id)
 setup_database()
-
+#hah
 
 #haha, you know whats funnier than 24?
 #25!!!!
