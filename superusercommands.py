@@ -1,4 +1,3 @@
-#database setup for bank system, will add more later
 
 import sqlite3
 
@@ -10,7 +9,7 @@ c = conn.cursor()
 
 
 async def superuser_commands(message):
-
+    
     match message.content:
 
         case s if s.startswith('!fixuser'):

@@ -19,6 +19,8 @@ async def help_command(message):
                     # general help page
                     await message.channel.send("""Available commands: 
             !help, !hello, !joke, !letslarp, !quote, !8ball, !uwu, !mommyasmr, !daddyasmr, !roll, !guessroll, !rps, !blackjack, !balance, !beg, !donate, !invest, !getinvestment, !sellinvested, !leaderboard, !work, @me (PinkGamer), penis, die, expensive, mcdonald, 6, goodnight, !shop, !buy, !inventory, !use
+SUPERUSER COMMANDS: only Alex/Redgamer can use those:
+            !fixuser, !givemoney
                                                 
             Type !help <command> for more info on a specific command""")
                 

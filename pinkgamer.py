@@ -13,6 +13,7 @@ from database import update_balance, get_balance, get_invested, update_invested,
 from gamefunctions import RPS, blackjack, roll
 from database import c, conn, setup_database
 from help_commands import help_command
+
 from superusercommands import superuser_commands
 
 
@@ -20,8 +21,8 @@ from superusercommands import superuser_commands
 setup_database()
 
 
-
-
+#haha, you know whats funnier than 24?
+#25!!!!
 from discord.ext import tasks
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
@@ -65,6 +66,7 @@ async def get_youtube_video(query):
 
 @tasks.loop(hours=6)
 async def apply_interest():
+
     bot_command_channel = client.get_channel(1443682362528632913)
     c.execute('SELECT user_id, invested FROM users WHERE invested > 0')
     users = c.fetchall()
@@ -505,6 +507,7 @@ async def on_message(message):
         case 'six':
             await message.channel.send('seven')
         
+
         
         case s if s.startswith('!use'):
             parts = message.content.split()
@@ -608,9 +611,10 @@ async def on_message(message):
                     await message.channel.send(f'no item called {item_name}')
 
         case _:
+            await superuser_commands(message)
             pass
         
-    superuser_commands(message)
+    
 
     #if the word is contained within the message
 
