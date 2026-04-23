@@ -34,9 +34,6 @@ def setup_database():
 
 
 
-
-
-
 # returns the balance of the user_id spesificed from the database, if the user_id does not exist it creates a new entry with a balance of 100 and returns 100
 def get_balance(user_id):
     c.execute('SELECT balance FROM users WHERE user_id = ?', (str(user_id),))
