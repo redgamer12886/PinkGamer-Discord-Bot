@@ -11,7 +11,7 @@ import asyncio
 from database import update_balance, get_balance, get_invested, update_invested, add_item, get_item_quantity, remove_item
 
 from gamefunctions import RPS, blackjack, roll
-from database import c, conn, setup_database
+from database import c, conn, setup_database, get_marriage
 from help_commands import help_command
 from items import buy, inventory, shop, use
 
@@ -186,6 +186,15 @@ async def on_message(message):
             #bossdrobots idea. No clue what it means
             await message.channel.send('just this one time')
 
+        case '!monkey':
+            await message.channel.send()
+
+
+
+
+
+
+            
         case '!beg':
             begamount = [1, 1, 1, 5, 10, 5, 2, 3, 1, 1, 1, 1, 10, 3, 4, 5, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 10]
             choice = random.choice(begamount)
@@ -460,6 +469,41 @@ async def on_message(message):
         case s if s.startswith('!use'):
             await use(message, client)
 
+        case '!propose':
+            await message.channel.send('who do you want to propose to? (@ them)')
+            response = await client.wait_for('message', check=check)
+            if len(response.mentions) == 0:
+                await message.channel.send('You need to @ someone!')
+                return
+            else:
+                partner_id = response.mentions[0].id
+
+            if partner_id == message.author.id:
+                await message.channel.send('you cant marry yourself dummy')
+                return
+
+            c.execute('INSERT OR IGNORE INTO marriages (user_id, partner_id) VALUES (?, ?)', (str(message.author.id), str(partner_id)))
+            c.execute('INSERT OR IGNORE INTO marriages (user_id, partner_id) VALUES (?, ?)', (str(partner_id), str(message.author.id)))
+            conn.commit()
+            await message.channel.send(f'Congratulations <@{message.author.id}> and <@{partner_id}> on your marriage!')
+
+
+
+        case '!married':
+            married = get_marriage(message.author.id)
+            if married is None:
+                await message.channel.send('you are not married')
+            else:
+            
+                for partner_id in married:
+                    await message.channel.send(f'you are married to {client.get_user(int(partner_id)).display_name}')
+                    
+                    embed = discord.Embed()
+                    embed.set_image(url=client.get_user(int(partner_id)).display_avatar.url)
+                    await message.channel.send(embed=embed)
+
+
+                    
         case _:
             await superuser_commands(message)
             pass

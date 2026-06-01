@@ -1,5 +1,6 @@
 import sqlite3
 import random
+from unittest import result
 import discord
 import os
 import time
@@ -20,8 +21,11 @@ def setup_database():
     c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER, invested FLOAT DEFAULT 0)')
     c.execute('CREATE TABLE IF NOT EXISTS items (item_id INTEGER PRIMARY KEY, name TEXT, price INTEGER, description TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS inventory (user_id TEXT, item_id INTEGER, quantity INTEGER)')
+    c.execute('CREATE TABLE IF NOT EXISTS marriages (user_id TEXT, partner_id TEXT, UNIQUE(user_id, partner_id))')
     c.execute("INSERT OR IGNORE INTO items VALUES (1, 'lockpick', 50, 'Attempt to steal money from someone')")
     c.execute("INSERT OR IGNORE INTO items VALUES (2, 'lock', 75, 'Protects you from being stolen from')")
+    
+    
     try:
         c.execute('ALTER TABLE users ADD COLUMN active_locks INTEGER DEFAULT 0')
     except:
@@ -32,7 +36,17 @@ def setup_database():
     c.execute("DELETE FROM users WHERE user_id LIKE '<Message%'")
     conn.commit()
 
+def get_marriage(user_id):
+    c.execute('SELECT partner_id FROM marriages WHERE user_id = ?', (str(user_id),))
+    result = c.fetchall()
+    
+    
+    if not result:
+        return None
+    return [row[0] for row in result]
 
+    
+    
 
 # returns the balance of the user_id spesificed from the database, if the user_id does not exist it creates a new entry with a balance of 100 and returns 100
 def get_balance(user_id):
