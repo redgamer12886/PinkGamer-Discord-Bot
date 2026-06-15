@@ -17,6 +17,7 @@ conn = sqlite3.connect('bank.db')
 c = conn.cursor()
 
 
+
 def setup_database():
     c.execute('CREATE TABLE IF NOT EXISTS users (user_id TEXT, balance INTEGER, invested FLOAT DEFAULT 0)')
     c.execute('CREATE TABLE IF NOT EXISTS items (item_id INTEGER PRIMARY KEY, name TEXT, price INTEGER, description TEXT)')
@@ -36,6 +37,8 @@ def setup_database():
     c.execute("DELETE FROM users WHERE user_id LIKE '<Message%'")
     conn.commit()
 
+
+
 def get_marriage(user_id):
     c.execute('SELECT partner_id FROM marriages WHERE user_id = ?', (str(user_id),))
     result = c.fetchall()
@@ -46,6 +49,18 @@ def get_marriage(user_id):
     return [row[0] for row in result]
 
     
+def marrying(user_id, partner_id):
+    # marry two users
+    c.execute('INSERT OR IGNORE INTO marriages (user_id, partner_id) VALUES (?, ?)', (str(user_id), str(partner_id)))
+    c.execute('INSERT OR IGNORE INTO marriages (user_id, partner_id) VALUES (?, ?)', (str(partner_id), str(user_id)))
+    conn.commit()
+
+def divorce(user_id, partner_id):
+    # divorce two users
+    c.execute('DELETE FROM marriages WHERE user_id = ? AND partner_id = ?', (str(user_id), str(partner_id)))
+    c.execute('DELETE FROM marriages WHERE user_id = ? AND partner_id = ?', (str(partner_id), str(user_id)))
+    conn.commit()
+
     
 
 # returns the balance of the user_id spesificed from the database, if the user_id does not exist it creates a new entry with a balance of 100 and returns 100

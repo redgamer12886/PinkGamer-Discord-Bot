@@ -1,5 +1,7 @@
+from email.mime import message
 import sqlite3
 import random
+from unittest import case
 import discord
 import os
 import time
@@ -8,7 +10,7 @@ import asyncio
 # importing from other files ive writen for better organization. 
 # gamefunctions is for functions related to games
 # databasefunctions is for functions related to the database. will add more as i go along
-from database import update_balance, get_balance, get_invested, update_invested, add_item, get_item_quantity, remove_item
+from database import divorce, marrying, update_balance, get_balance, get_invested, update_invested, add_item, get_item_quantity, remove_item
 
 from gamefunctions import RPS, blackjack, roll
 from database import c, conn, setup_database, get_marriage
@@ -482,10 +484,52 @@ async def on_message(message):
                 await message.channel.send('you cant marry yourself dummy')
                 return
 
-            c.execute('INSERT OR IGNORE INTO marriages (user_id, partner_id) VALUES (?, ?)', (str(message.author.id), str(partner_id)))
-            c.execute('INSERT OR IGNORE INTO marriages (user_id, partner_id) VALUES (?, ?)', (str(partner_id), str(message.author.id)))
-            conn.commit()
+            # helper function marry users
+            marrying(message.author.id, partner_id)
+
             await message.channel.send(f'Congratulations <@{message.author.id}> and <@{partner_id}> on your marriage!')
+
+            
+
+
+
+        case '!divorce':
+            
+
+            cost = 10000
+
+            await message.channel.send('who do you want to divorce? and pay a ${cost} fee (@ them)')
+            response = await client.wait_for('message', check=check)
+            if len(response.mentions) == 0:
+                await message.channel.send('You need to @ someone!')
+                return
+            else:
+                partner_id = response.mentions[0].id
+
+            if partner_id == message.author.id:
+                await message.channel.send('you cant marry yourself dummy')
+                return
+
+            if not get_marriage(message.author.id):
+                await message.channel.send('you are not married')
+                return
+            
+            if get_balance(message.author.id) < cost:
+                await message.channel.send('Fucking poor, to poor to make your life better. Live in this hell with !')
+                for partner_id in married:
+                    await message.channel.send(f'{client.get_user(int(partner_id)).display_name}')
+                return
+
+
+            update_balance(message.author.id, get_balance(message.author.id) - cost)
+
+
+            # helper function marry users
+            divorce(message.author.id, partner_id)
+
+
+            await message.channel.send(f'Congratulations <@{message.author.id}> and <@{partner_id}> on no longer in a living hell!')
+
 
 
 
@@ -501,6 +545,7 @@ async def on_message(message):
                     embed = discord.Embed()
                     embed.set_image(url=client.get_user(int(partner_id)).display_avatar.url)
                     await message.channel.send(embed=embed)
+
 
 
                     

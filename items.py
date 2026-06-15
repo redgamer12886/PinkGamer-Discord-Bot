@@ -8,6 +8,7 @@ import asyncio
 from database import add_item, c, conn, get_balance, get_item_quantity, get_item_quantity, remove_item, update_balance
 
 
+
 #prints out user inventory
 async def inventory(message, client):
     # get all items in the user's inventory
