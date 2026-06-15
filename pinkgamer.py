@@ -495,10 +495,11 @@ async def on_message(message):
 
         case '!divorce':
             
+            
 
             cost = 10000
 
-            await message.channel.send('who do you want to divorce? and pay a ${cost} fee (@ them)')
+            await message.channel.send(f'who do you want to divorce? and pay a ${cost} fee (@ them)')
             response = await client.wait_for('message', check=check)
             if len(response.mentions) == 0:
                 await message.channel.send('You need to @ someone!')
