@@ -1,7 +1,7 @@
 import sqlite3
 import random
 from unittest import result
-import discord
+import discord 
 import os
 import time
 import asyncio

@@ -1,6 +1,4 @@
-@echo off
-taskkill /f /im pythonw.exe
+call stop.bat
 
-cd /d "%~dp0"
-call venv\Scripts\activate
-pythonw pinkgamer.py
+
+call start.bat

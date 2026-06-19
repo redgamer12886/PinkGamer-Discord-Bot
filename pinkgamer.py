@@ -103,6 +103,7 @@ async def on_message(message):
         return m.author == message.author and m.channel == message.channel
 
 
+
     # for all commands that are exactly that message
     match message.content.lower():
         
